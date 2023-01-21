@@ -1,0 +1,63 @@
+QMainWindow {
+    background-color:#080229;
+}
+
+QMainWindow::titlebar {
+    background-color: #c92727;
+}
+
+
+QLabel {
+    font: 14px;
+    color: #ffffff;
+    font-weight: 500;
+    /* background-color: #3f3f3f; */
+}
+
+QLineEdit {
+    font: 14px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #242424;
+    color: #ffffff ;
+    font-weight: 500;
+}
+
+QPushButton {
+    font: 14px;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #091bb8;
+}
+
+QPushButton:hover {
+    background-color: #05149c;
+}
+
+QLabel#date_label {
+    margin-left: 280px;
+    color: rgb(41, 219, 5);
+    font-weight: bold;
+}
+
+QLabel#withdraw_mult_label {
+    color: aqua;
+    margin-bottom: 10px;
+    
+}
+
+QDateEdit#date_view {
+    font-size: 14px;
+    padding: 12px;
+    font-weight: bold;
+    color: rgb(0, 0, 0);
+    height: 18px;
+}
+
+
+
+
+
+
+
+ 
