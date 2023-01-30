@@ -4,13 +4,53 @@ import os
 import pkg_resources
 from datetime import datetime
 from PyQt5.QtCore import QDate
-from PyQt5.QtWidgets import QDateEdit
+from PyQt5.QtWidgets import QDateEdit, QWidget
+import csv
+
+
+class CustomTitleBar(QtWidgets.QWidget):
+    def __init__(self, parent=None):
+        super(CustomTitleBar, self).__init__(parent)
+
+        self.setFixedHeight(40)
+
+        self.close_button = QtWidgets.QPushButton("X", self)
+        self.close_button.setObjectName("close_button")
+        self.close_button.setGeometry(230, 0, 35, 35)
+        self.close_button.clicked.connect(parent.close)
+
+        self.minimize_button = QtWidgets.QPushButton("￣", self)
+        self.minimize_button.setObjectName("minimize_button")
+        self.minimize_button.setGeometry(190, 0, 35, 35)
+        self.minimize_button.clicked.connect(parent.showMinimized)
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setRenderHint(QtGui.QPainter.Antialiasing)
+        # painter.setBrush(QtGui.QColor("#3c3c3c"))
+        painter.drawRect(self.rect())
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.title_bar = CustomTitleBar(self)
+        self.setCentralWidget(self.title_bar)
+        self.setWindowTitle("Ebay Profit Cal")
+
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        layout.addStretch()
+
+        self.title_bar.setLayout(layout)
+
+        self.folder_name_label = QtWidgets.QLabel("Folder Name", self)
+        self.folder_name_entry = QtWidgets.QLineEdit(self)
+        self.create_folder_button = QtWidgets.QPushButton(
+            "Create Folder", self)
+        self.create_folder_button.clicked.connect(self.create_folder)
         current_date = datetime.now().strftime("%Y-%m-%d")
         date_label = QtWidgets.QLabel(current_date, self)
 
@@ -56,6 +96,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.calculate_button = QtWidgets.QPushButton("Calculate", self)
         self.calculate_button.clicked.connect(self.calculate_profit)
 
+        self.clear_button = QtWidgets.QPushButton("Clear", self)
+        self.clear_button.clicked.connect(self.clear_fields)
+
         self.sold_date_edit = QtWidgets.QDateEdit(self)
         self.sold_date_edit.setCalendarPopup(True)
         self.sold_date_edit.setDisplayFormat("yyyy-MM-dd")
@@ -80,6 +123,17 @@ class MainWindow(QtWidgets.QMainWindow):
         hbox_layout = QtWidgets.QHBoxLayout()
 
         layout.addRow(date_label)
+        hbox_layout = QtWidgets.QHBoxLayout()
+        hbox_layout.addWidget(self.folder_name_entry)
+        hbox_layout.addWidget(self.create_folder_button)
+        self.create_folder_button.setObjectName("create_folder_button")
+
+        layout = QtWidgets.QFormLayout()
+
+        layout.addWidget(self.title_bar)
+
+        layout.addRow(self.folder_name_label, hbox_layout)
+
         layout.addRow(self.item_title_label, self.item_title_entry)
         layout.addRow(self.item_link_label, self.item_link_entry)
         layout.addRow(self.item_tracking_label, self.item_tracking_entry)
@@ -121,6 +175,8 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addRow(hbox_layout3)
 
         layout.addRow(self.calculate_button)
+
+        layout.addRow(self.clear_button)
         self.export_button = QtWidgets.QPushButton("Export to txt", self)
         self.export_button.clicked.connect(self.export_to_txt)
         layout.addRow(self.export_button)
@@ -156,8 +212,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 profit_percentage, '.2f') + "%"
             self.percentage_label.setText(formatted_profit_percentage)
         except ValueError:
-            self.profit_entry.setText(
-                "Invalid Input")
+            self.profit_entry.setText("Invalid Input")
             self.profit_entry.setStyleSheet("color: red;")
         else:
             if profit < 0:
@@ -169,13 +224,48 @@ class MainWindow(QtWidgets.QMainWindow):
             self.profit_entry.setText(str(formatted_profit))
             self.percentage_label.setStyleSheet(self.profit_entry.styleSheet())
             self.update_mult_labels(item_doller_price, withdraw_doller_price)
-            
+
+        # Connecting returnPressed signal of QLineEdit to calculate_profit method
+        self.item_doller_price_entry.returnPressed.connect(
+            self.calculate_profit)
+        self.withdraw_doller_price_entry.returnPressed.connect(
+            self.calculate_profit)
+        self.item_cost_entry.returnPressed.connect(self.calculate_profit)
+        self.withdraw_entry.returnPressed.connect(self.calculate_profit)
+
+    def clear_fields(self):
+        self.item_cost_entry.clear()
+        self.withdraw_entry.clear()
+        self.profit_entry.clear()
+        self.item_title_entry.clear()
+        self.item_link_entry.clear()
+        self.item_tracking_entry.clear()
+        self.item_order_entry.clear()
+        self.customer_details_entry.clear()
+        self.percentage_label.clear()
+        self.folder_name_entry.clear()
 
     def update_mult_labels(self, item_doller_price, withdraw_doller_price):
         self.item_cost_mult_label.setText("{:.2f}".format(
             float(self.item_cost_entry.text()) * item_doller_price))
         self.withdraw_mult_label.setText("{:.2f}".format(
             float(self.withdraw_entry.text()) * withdraw_doller_price))
+
+    def create_folder(self):
+        folder_name = self.folder_name_entry.text()
+        if not folder_name:
+            self.profit_entry.setStyleSheet("color: #ff0000;")
+            self.profit_entry.setText("Please enter a folder name")
+            return
+        folder_path = os.path.join(os.getcwd(), folder_name)
+        try:
+            os.mkdir(folder_path)
+            self.profit_entry.setStyleSheet("color: #29DB05;")
+            self.profit_entry.setText("Folder Created Successfully")
+        except FileExistsError:
+            self.profit_entry.setStyleSheet("color: #ff0000;")
+            self.profit_entry.setText("Folder already exists")
+            return
 
     def export_to_txt(self):
         item_cost = self.item_cost_entry.text()
@@ -189,7 +279,10 @@ class MainWindow(QtWidgets.QMainWindow):
         sold_date = self.sold_date_edit.date().toString()
         ship_date = self.ship_date_edit.date().toString()
         profit_percentage = self.percentage_label.text()
-        filename = f"{item_title}.txt"
+
+        folder_path = os.path.join(os.getcwd(), self.folder_name_entry.text())
+
+        filename = os.path.join(folder_path, f"{item_title}.txt")
 
         with open(filename, "w") as file:
             file.truncate()
@@ -202,12 +295,20 @@ class MainWindow(QtWidgets.QMainWindow):
             file.write("Customer Details: " + customer_details + "\n")
             file.write("Item Cost: " + item_cost + "\n")
             file.write("Withdraw: " + withdraw + "\n")
-            file.write("Profit: " + profit + "\n")
-            file.write("Profit Percentage:" + profit_percentage + "\n")
+            file.write("Profit: " + profit + "     " +
+                       profit_percentage + "\n")
             file.write("Sold Date: " + sold_date + "\n")
             file.write("Ship Date: " + ship_date + "\n")
 
         os.startfile(filename)
+
+        folder_path = "F:\My-Training\AI\ChatGPT\E-profitCal"
+
+        csv_filename = os.path.join(folder_path, "profit_data.csv")
+
+        with open(csv_filename, "a", newline="") as csv_file:
+            writer = csv.writer(csv_file)
+            writer.writerow([item_cost, profit])
 
 
 app = QtWidgets.QApplication(sys.argv)
@@ -216,11 +317,13 @@ with pkg_resources.resource_stream(__name__, "style.css") as css_file:
     app.setStyleSheet(css)
 window = MainWindow()
 
-window.setMaximumSize(414, 560)
-window.setMinimumSize(414, 560)
-window.setGeometry(500, 50, 414, 560)
+# window.setMaximumSize(414, 600)
+# window.setMinimumSize(414, 600)
+window.setGeometry(500, 20, 414, 600)
 
 
 window.setWindowTitle("Ebay Profit Cal")
+window.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+
 window.show()
 sys.exit(app.exec_())
