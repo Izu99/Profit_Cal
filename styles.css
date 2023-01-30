@@ -18,25 +18,29 @@ QLineEdit {
     font: 14px;
     padding: 10px;
     border-radius: 5px;
-    background-color: #242424;
+    background-color: rgb(161, 161, 161);
     color: #ffffff ;
     font-weight: 500;
+    border: 1px solid #091bb8;
 }
 
 QPushButton {
     font: 14px;
     padding: 10px;
     border-radius: 10px;
-    background-color: #091bb8;
+    background-color: rgb(2, 5, 26);
+    color: #ffffff;
+    font-weight: 900;
+    border: 1px solid #091bb8;
 }
 
 QPushButton:hover {
-    background-color: #05149c;
+    background-color: rgb(1, 1, 8);
 }
 
 QLabel#date_label {
     margin-left: 280px;
-    color: rgb(41, 219, 5);
+    color: #29DB05;
     font-weight: bold;
 }
 
@@ -53,6 +57,21 @@ QDateEdit#date_view {
     color: rgb(0, 0, 0);
     height: 18px;
 }
+
+QPushButton#create_folder_button {
+    background-color: rgb(2, 5, 26);
+    border: 1px solid #091bb8;
+}
+
+#close_button, #minimize_button {
+    background-color: rgb(3, 7, 39);
+    color: white; 
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+
 
 
 
